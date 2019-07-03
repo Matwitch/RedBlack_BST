@@ -207,6 +207,11 @@ public:
 		Root = Insert(Root, ptr);
 	}
 
+	void Insert(T& value, KeyT key)
+	{
+		NodePointer<T, KeyT> ptr = std::make_shared<Node<T, KeyT>>(value, key);
+		Root = Insert(Root, ptr);
+	}
 	void Delete(KeyT key)
 	{
 		Root = Delete(Root, key);

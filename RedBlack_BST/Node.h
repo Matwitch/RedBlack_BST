@@ -12,7 +12,7 @@ template<typename T, typename KeyT = std::string>
 class Node
 {
 public:
-	Node(T&& value, KeyT key) : Node()
+	Node(const T&& value, KeyT key) : Node()
 	{
 		Key = key;
 		Value = std::make_shared<T>(std::move(value));
@@ -20,7 +20,7 @@ public:
 	Node(T& value, KeyT key) : Node()
 	{
 		Key = key;
-		Value = std::shared_ptr<Node<T, KeyT>>(&value);
+		Value = std::make_shared<T>(value);
 	}
 	Node()
 	{
