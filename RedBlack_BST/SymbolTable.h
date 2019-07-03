@@ -136,6 +136,20 @@ private:
 		return false;
 	}
 
+	NodePointer<T, KeyT>& Balance(NodePointer<T, KeyT>& node)
+	{
+		if (IsRed(node->Right) && !IsRed(node->Left))
+			RotateLeft(node);
+		if (IsRed(node->Left) && IsRed(node->Left->Left))
+			RotateRight(node);
+		if (IsRed(node->Left) && IsRed(node->Right))
+			Split(node);
+
+		node->Size = 1 + Size(node->Left) + Size(node->Right);
+
+		return node;
+	}
+
 	NodePointer<T, KeyT>& RotateLeft(NodePointer<T, KeyT>& node)
 	{
 		NodePointer<T, KeyT> temp = node->Left;
@@ -173,16 +187,7 @@ private:
 		else
 			node->Value = new_node->Value;
 
-		if (IsRed(node->Right) && !IsRed(node->Left))
-			RotateLeft(node);
-		if (IsRed(node->Left) && IsRed(node->Left->Left))
-			RotateRight(node);
-		if (IsRed(node->Left) && IsRed(node->Right))
-			Split(node);
-
-		node->Size = 1 + Size(node->Left) + Size(node->Right);
-
-		return node;
+		return Balance(node);
 	}
 
 	NodePointer<T, KeyT>& Delete(NodePointer<T, KeyT>& node, KeyT key)
@@ -271,8 +276,13 @@ public:
 		NodePointer<T, KeyT> ptr = std::make_shared<Node<T, KeyT>>(value, key);
 		Root = Insert(Root, ptr);
 	}
-	void Delete(KeyT key)
+	std::shared_ptr<T> Delete(KeyT key)
 	{
-		Root = Delete(Root, key);
+		std::shared_ptr<T> ptr = Get(key);
+
+		if (ptr != nullptr)
+			Root = Delete(Root, key);
+
+		return ptr;
 	}
 };
