@@ -64,15 +64,20 @@ private:
 
 	//-----Minimum and Maximum-----
 
-	NodePointer<T, KeyT> DeleteMin(NodePointer<T, KeyT> node)
+	NodePointer<T, KeyT>& DeleteMin(NodePointer<T, KeyT>& node)
 	{
 		if (node->Left == nullptr)
-			return node->Right;
+		{
+			NodePointer<T, KeyT> temp;
+			return temp;
+		}
+
+		if (!IsRed(node->Left) && !IsRed(node->Left->Left))
+			node = MoveRedLeft(node);
 
 		node->Left = DeleteMin(node->Left);
-		node->Size = Size(node->Left) + Size(node->Right) + 1;
 
-		return node;
+		return Balance(node);
 	}
 	
 	NodePointer<T, KeyT>& GetMin(NodePointer<T, KeyT>& node)
@@ -116,6 +121,28 @@ private:
 
 	//-----Red-Black balancing helper functions----
 
+	NodePointer<T, KeyT>& MoveRedLeft(NodePointer<T, KeyT>& node)
+	{
+		FlipColors(node);
+		if (IsRed(node->Right->Left))
+		{
+			node->Right = RotateRight(node->Right);
+			node = RotateLeft(node);
+			FlipColors(node);
+		}
+		return node;
+	}
+	NodePointer<T, KeyT>& MoveRedRight(NodePointer<T, KeyT>& node)
+	{
+		FlipColors(node);
+		if (IsRed(node->Left->Left))
+		{
+			node = RotateRight(node);
+			FlipColors(node);
+		}
+		return node;
+	}
+
 	bool IsRed(NodePointer<T, KeyT>& node)
 	{
 		if (node == nullptr)
@@ -124,49 +151,55 @@ private:
 		return node->Color == RefColor::Red;
 	}
 
-	bool Split(NodePointer<T, KeyT>& node)
+	void FlipColors(NodePointer<T, KeyT>& node)
 	{
-		if (node->Left->Color == RefColor::Red && node->Right->Color == RefColor::Red)
-		{
+		if (node->Right->Color == RefColor::Red)
 			node->Right->Color = RefColor::Black;
+		else
+			node->Right->Color = RefColor::Red;
+
+		if (node->Left->Color == RefColor::Red)
 			node->Left->Color = RefColor::Black;
+		else
+			node->Left->Color = RefColor::Red;
+
+		if (node->Color == RefColor::Black)
 			node->Color = RefColor::Red;
-			return true;
-		}
-		return false;
+		else
+			node->Color = RefColor::Black;
 	}
 
 	NodePointer<T, KeyT>& Balance(NodePointer<T, KeyT>& node)
 	{
 		if (IsRed(node->Right) && !IsRed(node->Left))
-			RotateLeft(node);
+			node = RotateLeft(node);
 		if (IsRed(node->Left) && IsRed(node->Left->Left))
-			RotateRight(node);
+			node = RotateRight(node);
 		if (IsRed(node->Left) && IsRed(node->Right))
-			Split(node);
+			FlipColors(node);
 
 		node->Size = 1 + Size(node->Left) + Size(node->Right);
 
 		return node;
 	}
 
-	NodePointer<T, KeyT>& RotateLeft(NodePointer<T, KeyT>& node)
-	{
-		NodePointer<T, KeyT> temp = node->Left;
-		temp->Color = node->Color;
-		node->Color = RefColor::Red;
-		node->Left = temp->Right;
-		temp->Left = node;
-
-		return temp;
-	}
-	NodePointer<T, KeyT>& RotateRight(NodePointer<T, KeyT>& node)
+	NodePointer<T, KeyT> RotateLeft(NodePointer<T, KeyT>& node)
 	{
 		NodePointer<T, KeyT> temp = node->Right;
 		temp->Color = node->Color;
 		node->Color = RefColor::Red;
 		node->Right = temp->Left;
 		temp->Left = node;
+
+		return temp;
+	}
+	NodePointer<T, KeyT> RotateRight(NodePointer<T, KeyT>& node)
+	{
+		NodePointer<T, KeyT> temp = node->Left;
+		temp->Color = node->Color;
+		node->Color = RefColor::Red;
+		node->Left = temp->Right;
+		temp->Right = node;
 
 		return temp;
 	}
@@ -192,34 +225,40 @@ private:
 
 	NodePointer<T, KeyT>& Delete(NodePointer<T, KeyT>& node, KeyT key)
 	{
-		if (node == nullptr)
-		{
-			NodePointer<T, KeyT> temp(nullptr);
-			return temp;
-		}
-
 		int compare = comparator(key, node->Key);
 
 		if (compare < 0)
+		{
+			if (!IsRed(node->Left) && !IsRed(node->Left->Left))
+				node = MoveRedLeft(node);
 			node->Left = Delete(node->Left, key);
-		else if (compare > 0)
-			node->Right = Delete(node->Right, key);
+		}
 		else
 		{
-			if (node->Left == nullptr)
-				return node->Right;
-			if (node->Right == nullptr)
-				return node->Left;
+			if (IsRed(node->Left))
+				node = RotateRight(node);
 
-			NodePointer<T, KeyT> temp = node;
-			node = GetMin(temp->Right);
-			node->Right = DeleteMin(temp->Right);
-			node->Left = temp->Left;
+			if(compare == 0 && node->Right == nullptr)
+			{
+				NodePointer<T, KeyT> temp;
+				return temp;
+			}
+
+			if (!IsRed(node->Right) && !IsRed(node->Right->Left))
+				node = MoveRedRight(node);
+
+			if (compare == 0)
+			{
+				NodePointer<T, KeyT> temp = GetMin(node->Right);
+				node->Value = temp->Value;
+				node->Key = temp->Key;
+				node->Right = DeleteMin(node->Right);
+			}
+			else 
+				node->Right = Delete(node->Right, key);
 		}
 
-		node->Size = Size(node->Left) + Size(node->Right) + 1;
-
-		return node;
+		return Balance(node);
 	}
 
 public:
@@ -269,13 +308,14 @@ public:
 	{
 		NodePointer<T, KeyT> ptr = std::make_shared<Node<T, KeyT>>(std::forward<T>(value), key);
 		Root = Insert(Root, ptr);
+		Root->Color = RefColor::Black;
 	}
-
 	void Insert(T& value, KeyT key)
 	{
 		NodePointer<T, KeyT> ptr = std::make_shared<Node<T, KeyT>>(value, key);
 		Root = Insert(Root, ptr);
 	}
+
 	std::shared_ptr<T> Delete(KeyT key)
 	{
 		std::shared_ptr<T> ptr = Get(key);
@@ -283,6 +323,7 @@ public:
 		if (ptr != nullptr)
 			Root = Delete(Root, key);
 
+		Root->Color = RefColor::Black;
 		return ptr;
 	}
 };
