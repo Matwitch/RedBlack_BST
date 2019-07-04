@@ -49,7 +49,7 @@ int main()
 		if (ptr == nullptr)
 			std::cout << "Wrong deletion index!" << std::endl;
 		else
-			std::cout << ptr.get() << " - is being destroyed" << std::endl;
+			std::cout << ptr.get() << " (" << ptr->TEST << ") - is being destroyed" << std::endl;
 	}
 
 	std::cout << "Check squence #2 (" << ST.Size() << "): " << std::endl << std::endl;
