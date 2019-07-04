@@ -68,8 +68,8 @@ private:
 	{
 		if (node->Left == nullptr)
 		{
-			NodePointer<T, KeyT> temp;
-			return temp;
+			node.reset();
+			return node;
 		}
 
 		if (!IsRed(node->Left) && !IsRed(node->Left->Left))
@@ -80,7 +80,7 @@ private:
 		return Balance(node);
 	}
 	
-	NodePointer<T, KeyT>& GetMin(NodePointer<T, KeyT>& node)
+	NodePointer<T, KeyT> GetMin(NodePointer<T, KeyT> node)
 	{
 		while (node->Left != nullptr)
 		{
@@ -89,7 +89,7 @@ private:
 
 		return node;
 	}
-	NodePointer<T, KeyT>& GetMax(NodePointer<T, KeyT>& node)
+	NodePointer<T, KeyT> GetMax(NodePointer<T, KeyT> node)
 	{
 		while (node->Right != nullptr)
 		{
@@ -240,8 +240,8 @@ private:
 
 			if(compare == 0 && node->Right == nullptr)
 			{
-				NodePointer<T, KeyT> temp;
-				return temp;
+				node.reset();
+				return node;
 			}
 
 			if (!IsRed(node->Right) && !IsRed(node->Right->Left))
@@ -323,7 +323,14 @@ public:
 		if (ptr != nullptr)
 			Root = Delete(Root, key);
 
-		Root->Color = RefColor::Black;
+		if (Root != nullptr)
+			Root->Color = RefColor::Black;
+
 		return ptr;
+	}
+
+	bool IsEmpty()
+	{
+		return Size(Root) == 0;
 	}
 };

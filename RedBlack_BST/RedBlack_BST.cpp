@@ -20,12 +20,13 @@ public:
 
 int main()
 {
+	int CHECK_VALUE = 5;
 	SymbolTable<MyClass, int> ST;
 
 	std::cout << "Insertion squence #1:" << std::endl << std::endl;
-	for (int i = rand() % 10; i < 10; i++)
+	for (int i = rand() % CHECK_VALUE; i < CHECK_VALUE; i++)
 	{
-		std::cout << "Inserting at key " << (i + i % 2) << std::endl;
+		std::cout << "Inserting at key " << (i) << std::endl;
 		ST.Insert(MyClass(i), i);
 	}
 
@@ -42,13 +43,13 @@ int main()
 
 
 	std::cout << "Deletion squence #1:" << std::endl << std::endl;
-	for (int i = rand() % 10; i < 10; i++)
+	for (int i = rand() % CHECK_VALUE; i < CHECK_VALUE; i++)
 	{
-		std::shared_ptr<MyClass> ptr = ST.Delete(i + i % 2);
+		std::shared_ptr<MyClass> ptr = ST.Delete(i);
 		if (ptr == nullptr)
 			std::cout << "Wrong deletion index!" << std::endl;
 		else
-			std::cout << ptr.get() << " - is about to be destroyed" << std::endl;
+			std::cout << ptr.get() << " - is being destroyed" << std::endl;
 	}
 
 	std::cout << "Check squence #2 (" << ST.Size() << "): " << std::endl << std::endl;
