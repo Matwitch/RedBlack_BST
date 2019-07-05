@@ -111,12 +111,12 @@ private:
 		Inorder(node->Right, array);
 	}
 
-	int Size(NodePointer<T, KeyT> node)
+	int Size(NodePointer<T, KeyT>& node)
 	{
 		if (node == nullptr)
 			return 0;
 
-		return node->Size;
+		return Size(node->Left) + Size(node->Right) + 1;
 	}
 
 	//-----Red-Black balancing helper functions----
@@ -218,16 +218,17 @@ private:
 		else if (compare > 0)
 			node->Right = Insert(node->Right, new_node);
 		else
+		{
+			std::cout << "REPLACED";
 			node->Value = new_node->Value;
+		}
 
 		return Balance(node);
 	}
 
 	NodePointer<T, KeyT>& Delete(NodePointer<T, KeyT>& node, KeyT key)
 	{
-		int compare = comparator(key, node->Key);
-
-		if (compare < 0)
+		if (comparator(key, node->Key) < 0)
 		{
 			if (!IsRed(node->Left) && !IsRed(node->Left->Left))
 				node = MoveRedLeft(node);
@@ -238,7 +239,7 @@ private:
 			if (IsRed(node->Left))
 				node = RotateRight(node);
 
-			if(compare == 0 && node->Right == nullptr)
+			if(comparator(key, node->Key) == 0 && node->Right == nullptr)
 			{
 				node.reset();
 				return node;
@@ -247,7 +248,7 @@ private:
 			if (!IsRed(node->Right) && !IsRed(node->Right->Left))
 				node = MoveRedRight(node);
 
-			if (compare == 0)
+			if (comparator(key, node->Key) == 0)
 			{
 				NodePointer<T, KeyT> temp = GetMin(node->Right);
 				node->Value = temp->Value;
